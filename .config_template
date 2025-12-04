@@ -1,0 +1,6 @@
+{
+    "module_name": "secret_manager",
+    "path": {
+        "data": "./project/data/secret_manager"
+    }
+}

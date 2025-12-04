@@ -1,0 +1,4 @@
+version: 0.0.1
+folder_path: managers/secret_manager
+type: manager
+requirements: []
