@@ -1,4 +1,8 @@
 version: 0.0.1
 folder_path: managers/secret_manager
 type: manager
-requirements: []
+repo_url: https://github.com/AI-Driven-Highspeed-Development/secret_manager.git
+requirements:
+  - https://github.com/AI-Driven-Highspeed-Development/Logger-Util.git
+  - https://github.com/AI-Driven-Highspeed-Development/ignore_manager.git
+  - https://github.com/AI-Driven-Highspeed-Development/exceptions_core.git
