@@ -3,9 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Optional
 
+
 import yaml
 
-from cores.exceptions_core import ADHDError
+from cores.exceptions_core.adhd_exceptions import ADHDError
 from managers.ignore_manager import IgnoreManager
 from utils.logger_util import Logger
 
@@ -176,10 +177,21 @@ class SecretManager:
             if self._ignore_manager.is_ignored(pattern):
                 return  # At least one pattern is ignored, we're safe
 
-        # Also check if globally ignored (user might have added it manually)
-        relative_path = str(self.secrets_path.relative_to(self._find_project_root()))
-        if self._ignore_manager.is_globally_ignored(relative_path):
+        # Also check if the secrets filename itself is ignored
+        if self._ignore_manager.is_ignored(self.secrets_path.name):
             return
+
+        # Try to check relative path if within project root
+        try:
+            project_root = self._find_project_root()
+            relative_path = str(self.secrets_path.relative_to(project_root))
+            if self._ignore_manager.is_globally_ignored(relative_path):
+                return
+        except ValueError:
+            # secrets_path is not under project root (e.g., temp directory)
+            # Check if just the filename is globally ignored
+            if self._ignore_manager.is_globally_ignored(self.secrets_path.name):
+                return
 
         raise SecretNotIgnoredError(
             f"SECURITY: Secrets file '{self.secrets_path}' is NOT in .gitignore! "

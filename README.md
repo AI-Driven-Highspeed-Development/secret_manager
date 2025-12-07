@@ -11,6 +11,24 @@ Securely manage API keys and sensitive configuration. Stores secrets in `project
 - **Managed zone**: Uses `IgnoreManager`'s private zone for reliable protection
 - **Pattern coverage**: Protects both `secrets.yaml` and `secrets.*.yaml` variants
 
+## CLI Usage
+
+You can manage secrets directly from the terminal using the included CLI tool.
+
+```bash
+# List all secrets
+python managers/secret_manager/secret_cli.py list
+
+# Set a secret (securely prompts for input)
+python managers/secret_manager/secret_cli.py set OPENAI_API_KEY
+
+# Get a secret value
+python managers/secret_manager/secret_cli.py get OPENAI_API_KEY
+
+# Delete a secret
+python managers/secret_manager/secret_cli.py delete OPENAI_API_KEY
+```
+
 ## Usage
 
 ```python
