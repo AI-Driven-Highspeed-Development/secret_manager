@@ -1,76 +1,106 @@
-#!/usr/bin/env python3
+"""CLI commands and registration for secret_manager."""
+
 import argparse
 import getpass
-import os
 import sys
 
-# Add project root to path to allow absolute imports
-# managers/secret_manager/secret_cli.py -> managers/secret_manager -> managers -> root
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
 from managers.secret_manager.secret_manager import SecretManager
+from managers.cli_manager import CLIManager, ModuleRegistration, Command, CommandArg
 
-def main():
-    parser = argparse.ArgumentParser(description="Manage secrets securely.")
-    subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # List
-    subparsers.add_parser("list", help="List all secret keys")
+# ─────────────────────────────────────────────────────────────────────────────
+# Handler Functions
+# ─────────────────────────────────────────────────────────────────────────────
 
-    # Get
-    get_parser = subparsers.add_parser("get", help="Get a secret value")
-    get_parser.add_argument("key", help="The secret key")
+def list_secrets(args: argparse.Namespace) -> int:
+    """List all secret keys."""
+    sm = SecretManager()
+    keys = sm.list_secrets()
+    if keys:
+        print("Secrets:")
+        for k in keys:
+            print(f"  - {k}")
+    else:
+        print("No secrets found.")
+    return 0
 
-    # Set
-    set_parser = subparsers.add_parser("set", help="Set a secret value")
-    set_parser.add_argument("key", help="The secret key")
 
-    # Delete
-    del_parser = subparsers.add_parser("delete", help="Delete a secret")
-    del_parser.add_argument("key", help="The secret key")
+def get_secret(args: argparse.Namespace) -> int:
+    """Get a secret value."""
+    sm = SecretManager()
+    val = sm.get_secret(args.key)
+    if val is not None:
+        print(val)
+        return 0
+    else:
+        print(f"Secret '{args.key}' not found.", file=sys.stderr)
+        return 1
 
-    args = parser.parse_args()
 
-    try:
-        sm = SecretManager()
+def set_secret(args: argparse.Namespace) -> int:
+    """Set a secret value."""
+    sm = SecretManager()
+    val = getpass.getpass(f"Enter value for '{args.key}': ")
+    if not val:
+        print("Aborted: Empty value.")
+        return 1
+    sm.set_secret(args.key, val)
+    print(f"Secret '{args.key}' set successfully.")
+    return 0
 
-        if args.command == "list":
-            keys = sm.list_secrets()
-            if keys:
-                print("Secrets:")
-                for k in keys:
-                    print(f"  - {k}")
-            else:
-                print("No secrets found.")
 
-        elif args.command == "get":
-            val = sm.get_secret(args.key)
-            if val is not None:
-                print(val)
-            else:
-                print(f"Secret '{args.key}' not found.", file=sys.stderr)
-                sys.exit(1)
+def delete_secret(args: argparse.Namespace) -> int:
+    """Delete a secret."""
+    sm = SecretManager()
+    if sm.delete_secret(args.key):
+        print(f"Secret '{args.key}' deleted.")
+        return 0
+    else:
+        print(f"Secret '{args.key}' not found.", file=sys.stderr)
+        return 1
 
-        elif args.command == "set":
-            val = getpass.getpass(f"Enter value for '{args.key}': ")
-            if not val:
-                print("Aborted: Empty value.")
-                sys.exit(1)
-            sm.set_secret(args.key, val)
-            print(f"Secret '{args.key}' set successfully.")
 
-        elif args.command == "delete":
-            if sm.delete_secret(args.key):
-                print(f"Secret '{args.key}' deleted.")
-            else:
-                print(f"Secret '{args.key}' not found.", file=sys.stderr)
-                sys.exit(1)
+# ─────────────────────────────────────────────────────────────────────────────
+# CLI Registration
+# ─────────────────────────────────────────────────────────────────────────────
 
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+def register_cli() -> None:
+    """Register secret_manager commands with CLIManager."""
+    cli = CLIManager()
+    cli.register_module(ModuleRegistration(
+        module_name="secret_manager",
+        short_name="sm",
+        description="Manage secrets securely",
+        commands=[
+            Command(
+                name="list",
+                help="List all secret keys",
+                handler="managers.secret_manager.secret_cli:list_secrets",
+            ),
+            Command(
+                name="get",
+                help="Get a secret value",
+                handler="managers.secret_manager.secret_cli:get_secret",
+                args=[
+                    CommandArg(name="key", help="The secret key"),
+                ],
+            ),
+            Command(
+                name="set",
+                help="Set a secret value",
+                handler="managers.secret_manager.secret_cli:set_secret",
+                args=[
+                    CommandArg(name="key", help="The secret key"),
+                ],
+            ),
+            Command(
+                name="delete",
+                help="Delete a secret",
+                handler="managers.secret_manager.secret_cli:delete_secret",
+                args=[
+                    CommandArg(name="key", help="The secret key"),
+                ],
+            ),
+        ],
+    ))
 
-if __name__ == "__main__":
-    main()
