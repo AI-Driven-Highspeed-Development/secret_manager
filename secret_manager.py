@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Optional
-
 
 import yaml
 
@@ -221,3 +221,6 @@ class SecretManager:
 
         content = yaml.dump(secrets, default_flow_style=False, allow_unicode=True)
         self.secrets_path.write_text(content, encoding="utf-8")
+
+        # Restrict permissions to owner only (0600)
+        os.chmod(self.secrets_path, 0o600)
