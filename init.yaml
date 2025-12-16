@@ -6,3 +6,4 @@ requirements:
   - https://github.com/AI-Driven-Highspeed-Development/Logger-Util.git
   - https://github.com/AI-Driven-Highspeed-Development/ignore_manager.git
   - https://github.com/AI-Driven-Highspeed-Development/exceptions_core.git
+  - https://github.com/AI-Driven-Highspeed-Development/cli_manager.git
