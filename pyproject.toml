@@ -1,0 +1,25 @@
+[project]
+name = "secret-manager"
+version = "0.0.1"
+description = "ADHD Framework manager: secret_manager"
+requires-python = ">=3.11"
+dependencies = [
+    "logger-util",
+    "ignore-manager",
+    "exceptions-core",
+    "cli-manager",
+    "PyYAML>=6.0",
+]
+
+[tool.adhd]
+type = "manager"
+layer = "runtime"
+
+[tool.uv.sources]
+logger-util = { workspace = true }
+ignore-manager = { workspace = true }
+exceptions-core = { workspace = true }
+cli-manager = { workspace = true }
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
