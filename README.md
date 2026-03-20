@@ -2,37 +2,34 @@
 
 ## Overview
 
-Securely manage API keys and sensitive configuration. Stores secrets in `project/data/secrets.yaml` and uses `IgnoreManager` to **GUARANTEE** the secrets file is NEVER pushed to git.
+Securely manage API keys and sensitive configuration. Stores secrets in `project/data/secrets.yaml` and ensures the secrets file is NEVER pushed to git via `.gitignore` management.
 
 ## Security Features
 
 - **Auto-gitignore**: On initialization, automatically adds secrets patterns to `.gitignore`
 - **Write validation**: Refuses to write if secrets file isn't gitignored
-- **Managed zone**: Uses `IgnoreManager`'s private zone for reliable protection
 - **Pattern coverage**: Protects both `secrets.yaml` and `secrets.*.yaml` variants
 
 ## CLI Usage
 
-You can manage secrets directly from the terminal using the included CLI tool.
-
 ```bash
 # List all secrets
-python managers/secret_manager/secret_cli.py list
+python adhd_framework.py sm list
 
 # Set a secret (securely prompts for input)
-python managers/secret_manager/secret_cli.py set OPENAI_API_KEY
+python adhd_framework.py sm set OPENAI_API_KEY
 
 # Get a secret value
-python managers/secret_manager/secret_cli.py get OPENAI_API_KEY
+python adhd_framework.py sm get OPENAI_API_KEY
 
 # Delete a secret
-python managers/secret_manager/secret_cli.py delete OPENAI_API_KEY
+python adhd_framework.py sm delete OPENAI_API_KEY
 ```
 
 ## Usage
 
 ```python
-from managers.secret_manager import SecretManager
+from secret_manager import SecretManager
 
 # Initialize (auto-adds to .gitignore)
 secrets = SecretManager()
@@ -77,7 +74,7 @@ secrets = SecretManager(auto_ensure_ignored=False)
 ## Error Handling
 
 ```python
-from managers.secret_manager import SecretManager, SecretNotIgnoredError
+from secret_manager import SecretManager, SecretNotIgnoredError
 
 try:
     secrets.set_secret("KEY", "value")
@@ -88,16 +85,19 @@ except SecretNotIgnoredError:
 ## Module Structure
 
 ```
-managers/secret_manager/
+modules/foundation/secret_manager/
 ├── __init__.py          # Module exports
-├── init.yaml            # Module metadata
+├── pyproject.toml       # Module metadata and dependencies
 ├── secret_manager.py    # SecretManager class
+├── secret_cli.py        # CLI commands
+├── refresh.py           # CLI registration on refresh
+├── .config_template     # Config defaults
 └── README.md            # This file
 ```
 
 ## Dependencies
 
-- `ignore_manager` - For gitignore protection
-- `logger_util` - For logging
-- `exceptions_core` - For ADHDError base class
-- `PyYAML` - For secrets file parsing
+- `logger_util` — Structured logging
+- `exceptions_core` — `ADHDError` base class
+- `cli_manager` — CLI command registration
+- `PyYAML` — Secrets file parsing

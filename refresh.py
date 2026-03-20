@@ -1,21 +1,20 @@
-"""Refresh script for secret_manager."""
+"""Refresh script for secret_manager.
 
-import os
-import sys
-from pathlib import Path
+Registers CLI commands with CLIManager.
 
-SCRIPT_DIR = Path(__file__).parent.resolve()
-PROJECT_ROOT = Path.cwd()
+Run via: python adhd_framework.py refresh --module secret-manager
+"""
 
-sys.path.insert(0, str(PROJECT_ROOT))
+from __future__ import annotations
 
-from managers.secret_manager.secret_cli import register_cli
+from logger_util import Logger
 
 
-def refresh() -> None:
-    """Register CLI commands for secret_manager."""
+def main() -> None:
+    """Refresh secret_manager — register CLI commands."""
+    logger = Logger(name="secret_managerRefresh")
+
+    from secret_manager.secret_cli import register_cli
+
     register_cli()
-
-
-if __name__ == "__main__":
-    refresh()
+    logger.info("secret_manager refresh complete (CLI commands registered)")

@@ -4,8 +4,8 @@ import argparse
 import getpass
 import sys
 
-from managers.secret_manager.secret_manager import SecretManager
-from managers.cli_manager import CLIManager, ModuleRegistration, Command, CommandArg
+from secret_manager.secret_manager import SecretManager
+from cli_manager import CLIManager, ModuleRegistration, Command, CommandArg
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -75,12 +75,12 @@ def register_cli() -> None:
             Command(
                 name="list",
                 help="List all secret keys",
-                handler="managers.secret_manager.secret_cli:list_secrets",
+                handler="secret_manager.secret_cli:list_secrets",
             ),
             Command(
                 name="get",
                 help="Get a secret value",
-                handler="managers.secret_manager.secret_cli:get_secret",
+                handler="secret_manager.secret_cli:get_secret",
                 args=[
                     CommandArg(name="key", help="The secret key"),
                 ],
@@ -88,7 +88,7 @@ def register_cli() -> None:
             Command(
                 name="set",
                 help="Set a secret value",
-                handler="managers.secret_manager.secret_cli:set_secret",
+                handler="secret_manager.secret_cli:set_secret",
                 args=[
                     CommandArg(name="key", help="The secret key"),
                 ],
@@ -96,7 +96,7 @@ def register_cli() -> None:
             Command(
                 name="delete",
                 help="Delete a secret",
-                handler="managers.secret_manager.secret_cli:delete_secret",
+                handler="secret_manager.secret_cli:delete_secret",
                 args=[
                     CommandArg(name="key", help="The secret key"),
                 ],
