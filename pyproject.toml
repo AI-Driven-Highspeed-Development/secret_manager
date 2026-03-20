@@ -7,6 +7,7 @@ dependencies = [
     "logger-util",
     "exceptions-core",
     "cli-manager",
+    "ignore-manager",
     "PyYAML>=6.0",
 ]
 
@@ -30,3 +31,4 @@ dev-mode-dirs = [".."]
 logger-util = { workspace = true }
 exceptions-core = { workspace = true }
 cli-manager = { workspace = true }
+ignore-manager = { workspace = true }

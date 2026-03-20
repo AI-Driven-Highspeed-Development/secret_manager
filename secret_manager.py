@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import fnmatch
 import os
 from pathlib import Path
 from typing import Any, Optional
@@ -8,6 +7,7 @@ from typing import Any, Optional
 import yaml
 
 from exceptions_core import ADHDError
+from ignore_manager import IgnoreManager
 from logger_util import Logger
 
 
@@ -43,6 +43,7 @@ class SecretManager:
             auto_ensure_ignored: If True, automatically add secrets to .gitignore on init.
         """
         self.logger = Logger(name=__class__.__name__)
+        self._ignore = IgnoreManager()
 
         # Resolve secrets path
         if secrets_path:
@@ -149,33 +150,12 @@ class SecretManager:
         Returns:
             True if secrets file path matches a pattern in .gitignore.
         """
-        project_root = self._find_project_root()
-        gitignore_path = project_root / ".gitignore"
-        if not gitignore_path.exists():
-            return False
-        content = gitignore_path.read_text(encoding="utf-8")
-        try:
-            rel = str(self.secrets_path.relative_to(project_root))
-        except ValueError:
-            rel = self.secrets_path.name
-        return self._pattern_in_gitignore(content, rel)
-
-    # ---------------- Internal helpers ----------------
-
-    @staticmethod
-    def _pattern_in_gitignore(content: str, pattern: str) -> bool:
-        """Check if a pattern (or its parent glob) appears in gitignore content."""
-        for line in content.splitlines():
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            # Exact match or fnmatch-style match
-            if line == pattern or line == pattern.split("/")[-1]:
-                return True
-            # Glob match (e.g. "secrets.*.yaml" matches "secrets.prod.yaml")
-            if fnmatch.fnmatch(pattern, line) or fnmatch.fnmatch(pattern.split("/")[-1], line):
+        for pattern in self.SECRETS_PATTERNS:
+            if self._ignore.is_globally_ignored(pattern):
                 return True
         return False
+
+    # ---------------- Internal helpers ----------------
 
     def _find_project_root(self) -> Path:
         """Find the project root by looking for pyproject.toml or .git."""
@@ -188,59 +168,14 @@ class SecretManager:
         return current
 
     def _ensure_secrets_ignored(self) -> None:
-        """Ensure all secrets patterns are in .gitignore."""
-        project_root = self._find_project_root()
-        gitignore_path = project_root / ".gitignore"
-
-        # Read existing content
-        existing = ""
-        if gitignore_path.exists():
-            existing = gitignore_path.read_text(encoding="utf-8")
-
-        patterns_to_add: list[str] = []
-        for pattern in self.SECRETS_PATTERNS:
-            if not self._pattern_in_gitignore(existing, pattern):
-                patterns_to_add.append(pattern)
-
-        if patterns_to_add:
-            lines = existing.rstrip("\n")
-            section = "\n# Secrets (managed by secret_manager)\n"
-            section += "\n".join(patterns_to_add) + "\n"
-            gitignore_path.write_text(
-                lines + "\n" + section if lines else section,
-                encoding="utf-8",
-            )
-            self.logger.debug("Secrets patterns added to .gitignore")
+        """Ensure all secrets patterns are in .gitignore via IgnoreManager."""
+        self._ignore.ensure_multiple(self.SECRETS_PATTERNS)
 
     def _validate_ignored_before_write(self) -> None:
         """Validate that secrets file is ignored before any write operation."""
-        project_root = self._find_project_root()
-        gitignore_path = project_root / ".gitignore"
-
-        if not gitignore_path.exists():
-            raise SecretNotIgnoredError(
-                f"SECURITY: No .gitignore found at '{project_root}'. "
-                f"Refusing to write secrets. Ensure a .gitignore exists."
-            )
-
-        content = gitignore_path.read_text(encoding="utf-8")
-
-        # Check if any of our patterns are covered
         for pattern in self.SECRETS_PATTERNS:
-            if self._pattern_in_gitignore(content, pattern):
+            if self._ignore.is_globally_ignored(pattern):
                 return
-
-        # Also check the secrets filename itself
-        if self._pattern_in_gitignore(content, self.secrets_path.name):
-            return
-
-        # Check relative path
-        try:
-            rel = str(self.secrets_path.relative_to(project_root))
-            if self._pattern_in_gitignore(content, rel):
-                return
-        except ValueError:
-            pass
 
         raise SecretNotIgnoredError(
             f"SECURITY: Secrets file '{self.secrets_path}' is NOT in .gitignore! "
